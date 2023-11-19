@@ -97,7 +97,7 @@ impl TryFrom<u8> for ParsedByte {
     }
 }
 
-#[derive(Copy, Clone, Default)]
+#[derive(Copy, Clone, Default, Debug)]
 enum State {
     #[default]
     Fresh,
@@ -113,7 +113,7 @@ const fn push_byte(current: u32, byte: u8) -> u32 {
 }
 
 /// A byte-by-byte UTF-8 parser.
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Utf8Parser {
     state: State,
 }
