@@ -198,6 +198,7 @@ impl Utf8Parser {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rand::Rng;
 
     #[test]
     fn conversion() -> Result<(), Utf8ParserError> {
@@ -265,5 +266,24 @@ mod tests {
     #[test]
     fn parse_emoji_stream() -> Result<(), Utf8ParserError> {
         parse_str_by_bytes("Thé quick brown 🦊 jamped over the lazy 🐕")
+    }
+
+    #[test]
+    fn random_input_dont_panic() {
+        let mut parser = Utf8Parser::default();
+        let mut rng = rand::thread_rng();
+        for _ in 0..1_000_000 {
+            let _ = parser.push(rng.gen());
+        }
+    }
+
+    #[test]
+    fn random_ascii_dont_error() {
+        let mut parser = Utf8Parser::default();
+        let mut rng = rand::thread_rng();
+        for _ in 0..1_000_000 {
+            let val: u8 = rng.gen();
+            parser.push(val % 0x80).unwrap();
+        }
     }
 }

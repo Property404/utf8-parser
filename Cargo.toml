@@ -16,3 +16,6 @@ default-feature = []
 std = []
 
 [dependencies]
+
+[dev-dependencies]
+rand = "0.8.5"
