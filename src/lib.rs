@@ -1,5 +1,5 @@
 //! A byte-by-byte UTF-8 parser
-#![cfg_attr(not(test), no_std)]
+#![cfg_attr(not(any(test, feature = "std")), no_std)]
 #![forbid(unsafe_code)]
 use core::fmt;
 
@@ -40,6 +40,9 @@ impl fmt::Display for Utf8ParserError {
         }
     }
 }
+
+#[cfg(feature = "std")]
+impl std::error::Error for Utf8ParserError {}
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 enum Utf8ByteType {

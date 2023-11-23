@@ -11,4 +11,8 @@ rust-version = "1.74"
 missing_docs = "warn"
 unsafe_code = "forbid"
 
+[features]
+default-feature = []
+std = []
+
 [dependencies]
