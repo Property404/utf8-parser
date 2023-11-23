@@ -1,6 +1,7 @@
 //! A byte-by-byte UTF-8 parser
 #![cfg_attr(not(test), no_std)]
 #![forbid(unsafe_code)]
+use core::fmt;
 
 /// Error type used for [Utf8Parser]
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
@@ -13,6 +14,31 @@ pub enum Utf8ParserError {
     UnexpectedStartByte(u8),
     /// Found a continuation byte in an unexpected place
     UnexpectedContinuationByte(u8),
+}
+
+impl fmt::Display for Utf8ParserError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::InvalidByte(byte) => {
+                write!(f, "Found invalid byte: 0x{byte:02x}")
+            }
+            Self::InvalidChar(word) => {
+                write!(f, "Parsed invalid UTF-8 code point: 0x{word:04x}")
+            }
+            Self::UnexpectedStartByte(byte) => {
+                write!(
+                    f,
+                    "Found start byte when a continuation byte was expected: 0x{byte:02x}"
+                )
+            }
+            Self::UnexpectedContinuationByte(byte) => {
+                write!(
+                    f,
+                    "Found continuation byte when a start byte was expected: 0x{byte:02x}"
+                )
+            }
+        }
+    }
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
