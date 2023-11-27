@@ -150,6 +150,18 @@ pub struct Utf8Parser {
 impl Utf8Parser {
     /// Push a byte into the parser
     pub fn push(&mut self, byte: u8) -> Result<Option<char>, Utf8ParserError> {
+        match self.push_inner_impl(byte) {
+            Ok(val) => Ok(val),
+            // Reset on error
+            Err(val) => {
+                self.reset();
+                Err(val)
+            }
+        }
+    }
+
+    // Inner functionality of `push`
+    fn push_inner_impl(&mut self, byte: u8) -> Result<Option<char>, Utf8ParserError> {
         let byte = ParsedByte::try_from(byte)?;
 
         match (self.state, byte) {
@@ -192,6 +204,11 @@ impl Utf8Parser {
                 Err(Utf8ParserError::UnexpectedContinuationByte(value))
             }
         }
+    }
+
+    // Reset the state
+    fn reset(&mut self) {
+        self.state = State::Fresh;
     }
 }
 
@@ -266,6 +283,16 @@ mod tests {
     #[test]
     fn parse_emoji_stream() -> Result<(), Utf8ParserError> {
         parse_str_by_bytes("Thé quick brown 🦊 jamped over the lazy 🐕")
+    }
+
+    #[test]
+    fn reset_state_after_error() {
+        let mut parser = Utf8Parser::default();
+        // Push a valid start byte
+        assert!(parser.push(0b1110_0000).is_ok());
+        // Push an invalid byte
+        assert!(parser.push(0b1111_1110).is_err());
+        assert_eq!(parser.push(b'a'), Ok(Some('a')));
     }
 
     #[test]
