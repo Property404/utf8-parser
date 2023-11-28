@@ -101,15 +101,8 @@ pub enum ParsedByte {
 }
 
 impl ParsedByte {
-    /// Returns true if this is a continuation byte
-    pub const fn is_continuation(self) -> bool {
-        matches!(self, ParsedByte::ContinuationByte(_))
-    }
-}
-
-impl TryFrom<u8> for ParsedByte {
-    type Error = Utf8ParserError;
-    fn try_from(byte: u8) -> Result<Self, Self::Error> {
+    /// Construct from a byte
+    pub const fn from_byte(byte: u8) -> Result<Self, Utf8ParserError> {
         if let Some(value) = Utf8ByteType::Single.matches(byte) {
             Ok(Self::Single(value))
         } else if let Some(value) = Utf8ByteType::Double.matches(byte) {
@@ -123,6 +116,18 @@ impl TryFrom<u8> for ParsedByte {
         } else {
             Err(Utf8ParserError::InvalidByte(byte))
         }
+    }
+
+    /// Returns true if this is a continuation byte
+    pub const fn is_continuation(self) -> bool {
+        matches!(self, ParsedByte::ContinuationByte(_))
+    }
+}
+
+impl TryFrom<u8> for ParsedByte {
+    type Error = Utf8ParserError;
+    fn try_from(byte: u8) -> Result<Self, Self::Error> {
+        Self::from_byte(byte)
     }
 }
 
