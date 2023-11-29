@@ -131,9 +131,8 @@ impl TryFrom<u8> for ParsedByte {
     }
 }
 
-#[derive(Copy, Clone, Default, Debug)]
+#[derive(Copy, Clone, Debug)]
 enum State {
-    #[default]
     Fresh,
     OneLeft(u32),
     TwoLeft(u32),
@@ -147,12 +146,19 @@ const fn push_byte(current: u32, byte: u8) -> u32 {
 }
 
 /// A byte-by-byte UTF-8 parser.
-#[derive(Default, Debug)]
+#[derive(Clone, Debug)]
 pub struct Utf8Parser {
     state: State,
 }
 
 impl Utf8Parser {
+    /// Construct a new Utf8Parser
+    pub const fn new() -> Self {
+        Self {
+            state: State::Fresh,
+        }
+    }
+
     /// Push a byte into the parser
     pub fn push(&mut self, byte: u8) -> Result<Option<char>, Utf8ParserError> {
         match self.push_inner_impl(byte) {
@@ -214,6 +220,12 @@ impl Utf8Parser {
     // Reset the state
     fn reset(&mut self) {
         self.state = State::Fresh;
+    }
+}
+
+impl Default for Utf8Parser {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
