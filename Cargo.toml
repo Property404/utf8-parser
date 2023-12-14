@@ -3,13 +3,7 @@ name = "utf8-parser"
 version = "0.0.2"
 edition = "2021"
 license = "MIT or APACHE-2.0"
-rust-version = "1.74"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[lints.rust]
-missing_docs = "warn"
-unsafe_code = "forbid"
+rust-version = "1.60"
 
 [features]
 default-feature = []
@@ -18,4 +12,4 @@ std = []
 [dependencies]
 
 [dev-dependencies]
-rand = "0.8.5"
+rand = "0.8"

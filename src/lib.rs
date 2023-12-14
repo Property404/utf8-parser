@@ -1,5 +1,6 @@
 #![doc = include_str!("../README.md")]
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
+#![warn(missing_docs)]
 #![forbid(unsafe_code)]
 mod error;
 pub use error::Utf8ParserError;
