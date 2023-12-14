@@ -41,5 +41,8 @@ jobs:
       - name: Build (std)
         run: cargo build --all-features --verbose
 
+      - name: Cargo.lock up-to-date
+        run: git diff --exit-code
+
       - name: Build documentation
         run: cargo doc --verbose
