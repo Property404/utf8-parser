@@ -18,8 +18,12 @@ pub use error::Utf8ParserError;
 /// # fn main2() -> Result<(), utf8_parser::Utf8ParserError> {
 /// use utf8_parser::Utf8ByteType;
 ///
-/// assert_eq!(Utf8ByteType::of(0b00001100)?, Utf8ByteType::Single);
-/// assert_eq!(Utf8ByteType::of(0b10001100)?, Utf8ByteType::Continuation);
+/// assert_eq!(Utf8ByteType::of(0b00000010)?, Utf8ByteType::Single);
+/// assert_eq!(Utf8ByteType::of(0b10000010)?, Utf8ByteType::Continuation);
+/// assert_eq!(Utf8ByteType::of(0b11000010)?, Utf8ByteType::Double);
+/// assert_eq!(Utf8ByteType::of(0b11100010)?, Utf8ByteType::Triple);
+/// assert_eq!(Utf8ByteType::of(0b11110010)?, Utf8ByteType::Quadruple);
+/// assert!(Utf8ByteType::of(0b11111010).is_err());
 /// # Ok(())
 /// # }
 /// ```
