@@ -11,6 +11,10 @@
 mod error;
 pub use error::Utf8ParserError;
 
+const FIRST_CODE_POINT_FOR_DOUBLE: u32 = 0x80;
+const FIRST_CODE_POINT_FOR_TRIPLE: u32 = 0x800;
+const FIRST_CODE_POINT_FOR_QUADRUPLE: u32 = 0x10000;
+
 /// Categorization of a valid byte in UTF-8
 ///
 /// # Example
@@ -186,17 +190,32 @@ impl Utf8Parser {
         match (self.state, byte) {
             (State::OneLeft(current), ParsedByte::ContinuationByte(value)) => {
                 self.state = State::Fresh;
-                let c = push_byte(current, value);
+                let val = push_byte(current, value);
+                if val < FIRST_CODE_POINT_FOR_DOUBLE {
+                    return Err(Utf8ParserError::OverlongEncoding);
+                }
                 Ok(Some(
-                    char::try_from(c).map_err(|_| Utf8ParserError::InvalidChar(c))?,
+                    char::try_from(val).map_err(|_| Utf8ParserError::InvalidChar(val))?,
                 ))
             }
             (State::TwoLeft(current), ParsedByte::ContinuationByte(value)) => {
-                self.state = State::OneLeft(push_byte(current, value));
+                let val = push_byte(current, value);
+                if val << Utf8ByteType::Continuation.value_mask_length()
+                    < FIRST_CODE_POINT_FOR_TRIPLE
+                {
+                    return Err(Utf8ParserError::OverlongEncoding);
+                }
+                self.state = State::OneLeft(val);
                 Ok(None)
             }
             (State::ThreeLeft(current), ParsedByte::ContinuationByte(value)) => {
-                self.state = State::TwoLeft(push_byte(current, value));
+                let val = push_byte(current, value);
+                if val << (2 * Utf8ByteType::Continuation.value_mask_length())
+                    < FIRST_CODE_POINT_FOR_QUADRUPLE
+                {
+                    return Err(Utf8ParserError::OverlongEncoding);
+                }
+                self.state = State::TwoLeft(val);
                 Ok(None)
             }
             (State::Fresh, ParsedByte::Single(value)) => Ok(Some(value as char)),
@@ -280,12 +299,11 @@ mod tests {
         assert_eq!(parser.push(b'l')?, Some('l'));
         assert_eq!(parser.push(b'l')?, Some('l'));
         assert_eq!(parser.push(b'o')?, Some('o'));
-        assert_eq!(parser.push(0b1100_0000)?, None);
+        assert_eq!(parser.push(0b1101_0000)?, None);
         Ok(())
     }
 
-    fn parse_str_by_bytes(original: &str) -> Result<(), Utf8ParserError> {
-        let original = original.as_bytes();
+    fn parse_str_by_bytes(original: &[u8]) -> Result<String, Utf8ParserError> {
         let mut rebuilt = String::new();
 
         let mut parser = Utf8Parser::default();
@@ -297,27 +315,97 @@ mod tests {
 
         assert_eq!(String::from_utf8(original.into()).unwrap(), rebuilt);
 
-        Ok(())
+        Ok(rebuilt)
     }
 
     #[test]
     fn parse_ascii_stream() -> Result<(), Utf8ParserError> {
-        parse_str_by_bytes("The quick brown fox jamped over the lazy dog")
+        parse_str_by_bytes("The quick brown fox jamped over the lazy dog".as_bytes())?;
+        Ok(())
     }
 
     #[test]
     fn parse_emoji_stream() -> Result<(), Utf8ParserError> {
-        parse_str_by_bytes("Thé quick brown 🦊 jamped over the lazy 🐕")
+        parse_str_by_bytes("Thé quick brown 🦊 jamped over the lazy 🐕".as_bytes())?;
+        Ok(())
     }
 
     #[test]
     fn reset_state_after_error() {
         let mut parser = Utf8Parser::default();
+
         // Push a valid start byte
         assert!(parser.push(0b1110_0000).is_ok());
         // Push an invalid byte
         assert!(parser.push(0b1111_1110).is_err());
         assert_eq!(parser.push(b'a'), Ok(Some('a')));
+    }
+
+    #[test]
+    fn error_on_overlong_encodings() {
+        let good: Vec<(&[u8], u32)> = vec![
+            // Represent 0x0 in one byte
+            (&[0b0_0000000], 0x00),
+            // Represent 0x7F in one byte
+            (&[0b0_1111111], 0x7f),
+            // Represent 0x80 in two bytes
+            (&[0b110_00010, 0b10_000000], 0x80),
+            // Represent 0x7ff in two bytes
+            (&[0b110_11111, 0b10_111111], 0x7ff),
+            // Represent 0x800 in three bytes
+            (&[0b1110_0000, 0b10_100000, 0b10_000000], 0x800),
+            // Represent 0xFFFF in three bytes
+            (&[0b1110_1111, 0b10_111111, 0b10_111111], 0xFFFF),
+            // Represent 0x10000 in four bytes
+            (
+                &[0b11110_000, 0b10_010000, 0b10_000000, 0b10_000000],
+                0x10000,
+            ),
+            // Represent 0x10FFFF in four bytes
+            (
+                &[0b11110_100, 0b10_001111, 0b10_111111, 0b10_111111],
+                0x10FFFF,
+            ),
+        ];
+        let overlong: Vec<&[u8]> = vec![
+            // Represent 0x00 in two bytes
+            &[0b110_00000, 0b10_000000],
+            // Represent 0x7F in two bytes
+            &[0b110_00001, 0b10_111111],
+            // Represent 0x00 in three bytes
+            &[0b1110_0000, 0b10_000000, 0b10_000000],
+            // Represent 0x7ff in three bytes
+            &[0b1110_0000, 0b10_011111, 0b10_111111],
+            // Represent 0x0 in four bytes
+            &[0b11110_000, 0b10_000000, 0b10_000000, 0b10_000000],
+            // Represent 0xFFFF in four bytes
+            &[0b11110_000, 0b10_001111, 0b10_000000, 0b10_111111],
+        ];
+        let err_but_not_overlong: Vec<&[u8]> = vec![
+            // Represent 0x110000 in four bytes
+            &[0b11110_110, 0b10_000000, 0b10_000000, 0b10_000000],
+        ];
+
+        for tv in good {
+            assert_eq!(
+                parse_str_by_bytes(tv.0).unwrap().chars().next().unwrap() as u32,
+                tv.1
+            );
+        }
+
+        for tv in overlong {
+            assert_eq!(
+                parse_str_by_bytes(tv).unwrap_err(),
+                Utf8ParserError::OverlongEncoding
+            );
+        }
+
+        for tv in err_but_not_overlong {
+            assert_ne!(
+                parse_str_by_bytes(tv).unwrap_err(),
+                Utf8ParserError::OverlongEncoding
+            );
+        }
     }
 
     #[test]
