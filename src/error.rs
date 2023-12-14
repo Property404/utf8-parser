@@ -1,6 +1,6 @@
 use core::fmt;
 
-/// Error type used for the utf8-parser crate
+/// Error type used for the `utf8-parser` crate
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
 pub enum Utf8ParserError {
     /// Encountered an invalid byte. This is a byte that's invalid no matter the context.

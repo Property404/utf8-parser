@@ -1,19 +1,74 @@
 //! A byte-by-byte UTF-8 parser
+//!
+//! # Example
+//!
+//! ```
+//! # fn main2() -> Result<(), utf8_parser::Utf8ParserError> {
+//! use utf8_parser::Utf8Parser;
+//!
+//! let mut parser = Utf8Parser::new();
+//! assert!(parser.push(0xf0)?.is_none());
+//! assert!(parser.push(0x9f)?.is_none());
+//! assert!(parser.push(0x8e)?.is_none());
+//! assert_eq!(parser.push(0x84)?.unwrap(), '🎄');
+//! # Ok(())
+//! # }
+//! ```
+//!
+//! # Features
+//!
+//! * `std` - Enables the [Error](core::error::Error) implementation on [Utf8ParserError]
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
 #![forbid(unsafe_code)]
 mod error;
 pub use error::Utf8ParserError;
 
-#[derive(Copy, Clone, PartialEq, Eq, Debug)]
-enum Utf8ByteType {
+/// Categorization of a valid byte in UTF-8
+///
+/// # Example
+/// ```
+/// # fn main2() -> Result<(), utf8_parser::Utf8ParserError> {
+/// use utf8_parser::Utf8ByteType;
+///
+/// assert_eq!(Utf8ByteType::of(0b00001100)?, Utf8ByteType::Single);
+/// assert_eq!(Utf8ByteType::of(0b10001100)?, Utf8ByteType::Continuation);
+/// # Ok(())
+/// # }
+/// ```
+#[derive(Copy, Clone, PartialEq, Eq, Debug, Hash)]
+pub enum Utf8ByteType {
+    /// A continuation byte
     Continuation,
+    /// A one-byte UTF-8 character, i.e. an ASCII value
     Single,
+    /// A start byte that must be followed by one continuation byte
     Double,
+    /// A start byte that must be followed by two continuation bytes
     Triple,
+    /// A start byte that must be followed by three continuation bytes
     Quadruple,
 }
 
 impl Utf8ByteType {
+    /// Get type of byte
+    pub fn of(byte: u8) -> Result<Self, Utf8ParserError> {
+        use Utf8ByteType::*;
+        let kinds = [Continuation, Single, Double, Triple, Quadruple];
+
+        for kind in kinds {
+            if kind.matches(byte) {
+                return Ok(kind);
+            }
+        }
+
+        Err(Utf8ParserError::InvalidByte(byte))
+    }
+
+    /// Returns true if this is a continuation byte
+    pub const fn is_continuation(self) -> bool {
+        matches!(self, Self::Continuation)
+    }
+
     const fn id(self) -> u8 {
         match self {
             Self::Single => 0b0,
@@ -36,58 +91,40 @@ impl Utf8ByteType {
         self.value_mask().count_ones()
     }
 
-    const fn matches(self, byte: u8) -> Option<u8> {
-        if (byte >> self.value_mask_length()) == self.id() {
-            Some(byte & self.value_mask())
-        } else {
-            None
-        }
+    const fn matches(self, byte: u8) -> bool {
+        (byte >> self.value_mask_length()) == self.id()
     }
 }
 
-/// A single byte from a UTF-8 stream
+// A single byte from a UTF-8 stream
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum ParsedByte {
-    /// A one-byte UTF-8 character, i.e. an ASCII value
+enum ParsedByte {
+    // A one-byte UTF-8 character, i.e. an ASCII value
     Single(u8),
-    /// A start byte that must be followed by one continuation character
+    // A start byte that must be followed by one continuation byte
     StartDouble(u8),
-    /// A start byte that must be followed by two continuation characters
+    // A start byte that must be followed by two continuation bytes
     StartTriple(u8),
-    /// A start byte that must be followed by three continuation characters
+    // A start byte that must be followed by three continuation bytes
     StartQuadruple(u8),
-    /// A continuation character
+    // A continuation byte
     ContinuationByte(u8),
 }
 
 impl ParsedByte {
-    /// Construct from a byte
-    pub const fn from_byte(byte: u8) -> Result<Self, Utf8ParserError> {
-        if let Some(value) = Utf8ByteType::Single.matches(byte) {
-            Ok(Self::Single(value))
-        } else if let Some(value) = Utf8ByteType::Double.matches(byte) {
-            Ok(Self::StartDouble(value))
-        } else if let Some(value) = Utf8ByteType::Triple.matches(byte) {
-            Ok(Self::StartTriple(value))
-        } else if let Some(value) = Utf8ByteType::Quadruple.matches(byte) {
-            Ok(Self::StartQuadruple(value))
-        } else if let Some(value) = Utf8ByteType::Continuation.matches(byte) {
-            Ok(Self::ContinuationByte(value))
-        } else {
-            Err(Utf8ParserError::InvalidByte(byte))
-        }
-    }
+    // Construct from a byte
+    fn from_byte(byte: u8) -> Result<Self, Utf8ParserError> {
+        use Utf8ByteType::*;
+        let kind = Utf8ByteType::of(byte)?;
+        let value = byte & kind.value_mask();
 
-    /// Returns true if this is a continuation byte
-    pub const fn is_continuation(self) -> bool {
-        matches!(self, ParsedByte::ContinuationByte(_))
-    }
-}
-
-impl TryFrom<u8> for ParsedByte {
-    type Error = Utf8ParserError;
-    fn try_from(byte: u8) -> Result<Self, Self::Error> {
-        Self::from_byte(byte)
+        Ok(match kind {
+            Continuation => Self::ContinuationByte(value),
+            Single => Self::Single(value),
+            Double => Self::StartDouble(value),
+            Triple => Self::StartTriple(value),
+            Quadruple => Self::StartQuadruple(value),
+        })
     }
 }
 
@@ -105,7 +142,26 @@ const fn push_byte(current: u32, byte: u8) -> u32 {
     (current << Utf8ByteType::Continuation.value_mask_length()) | (byte as u32)
 }
 
-/// A byte-by-byte UTF-8 parser.
+/// A stateful UTF-8 parser.
+///
+/// # Behavior on Errors
+///
+/// [Utf8Parser] will reset on errors. Example:
+///
+/// ```
+/// # fn main2() -> Result<(), utf8_parser::Utf8ParserError> {
+/// use utf8_parser::Utf8Parser;
+///
+/// let mut parser = Utf8Parser::new();
+/// // Utf-8 start byte
+/// assert!(parser.push(0xf0)?.is_none());
+/// // A continuation byte is expected here, but we're pushing an ASCII char
+/// assert!(parser.push(b'a').is_err());
+/// // The state is reset, so this now no longer errors
+/// assert_eq!(parser.push(b'a'), Ok(Some('a')));
+/// # Ok(())
+/// # }
+/// ```
 #[derive(Clone, Debug)]
 pub struct Utf8Parser {
     state: State,
@@ -133,7 +189,7 @@ impl Utf8Parser {
 
     // Inner functionality of `push`
     fn push_inner_impl(&mut self, byte: u8) -> Result<Option<char>, Utf8ParserError> {
-        let byte = ParsedByte::try_from(byte)?;
+        let byte = ParsedByte::from_byte(byte)?;
 
         match (self.state, byte) {
             (State::OneLeft(current), ParsedByte::ContinuationByte(value)) => {
@@ -218,7 +274,7 @@ mod tests {
         ];
 
         for tv in test_vectors.iter() {
-            assert_eq!(ParsedByte::try_from(tv.0)?, tv.1);
+            assert_eq!(ParsedByte::from_byte(tv.0)?, tv.1);
         }
 
         Ok(())
