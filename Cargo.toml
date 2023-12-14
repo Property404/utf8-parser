@@ -1,8 +1,14 @@
 [package]
 name = "utf8-parser"
+description = "A one-byte-at-a-time UTF-8 parser"
+categories = ["no-std::no-alloc"]
+keywords = ["unicode", "utf-8"]
+authors = ["Property404 <DontEmailMeOrMySonEverAgain@example.com>"]
+homepage = "https://github.com/Property404/lax"
+repository = "https://github.com/Property404/lax"
 version = "0.0.2"
 edition = "2021"
-license = "MIT or APACHE-2.0"
+license = "MIT OR APACHE-2.0"
 rust-version = "1.60"
 
 [features]
