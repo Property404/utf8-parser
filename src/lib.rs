@@ -2,7 +2,7 @@
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
 // Make sure our crate is documented
 #![warn(missing_docs)]
-// Makes use green in cargo-geiger
+// Makes us green in cargo-geiger
 #![forbid(unsafe_code)]
 // Allowing arbitrary bit groupings makes readability easier in this context.
 // This only seems to be a problem in older clippy versions. (1.60 is complaining)
