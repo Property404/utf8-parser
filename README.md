@@ -29,6 +29,10 @@ assert_eq!(parser.push(0x84).unwrap(), Some('🎄'));
     Currently requires Nightly and `#![feature(error_in_core)]`. Has no effect
     if the `std` feature is enabled.
 
+## Similar crates
+
+* [utf8parse](https://crates.io/crates/utf8parse) - by the Alacritty project
+
 ## License
 
 Licensed under either of
