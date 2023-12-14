@@ -1,23 +1,4 @@
-//! A byte-by-byte UTF-8 parser
-//!
-//! # Example
-//!
-//! ```
-//! # fn main2() -> Result<(), utf8_parser::Utf8ParserError> {
-//! use utf8_parser::Utf8Parser;
-//!
-//! let mut parser = Utf8Parser::new();
-//! assert!(parser.push(0xf0)?.is_none());
-//! assert!(parser.push(0x9f)?.is_none());
-//! assert!(parser.push(0x8e)?.is_none());
-//! assert_eq!(parser.push(0x84)?.unwrap(), '🎄');
-//! # Ok(())
-//! # }
-//! ```
-//!
-//! # Features
-//!
-//! * `std` - Enables the [Error](core::error::Error) implementation on [Utf8ParserError]
+#![doc = include_str!("../README.md")]
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
 #![forbid(unsafe_code)]
 mod error;
