@@ -15,7 +15,7 @@ assert!(parser.push(0x8e).unwrap().is_none());
 assert_eq!(parser.push(0x84).unwrap(), Some('🎄'));
 ```
 
-## Cargo Features
+## Crate Features
 
 * `std` - Enables the
     [Error](https://doc.rust-lang.org/beta/core/error/trait.Error.html)

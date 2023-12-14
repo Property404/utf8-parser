@@ -6,7 +6,7 @@ license = "MIT or APACHE-2.0"
 rust-version = "1.60"
 
 [features]
-default-feature = []
+default-feature = ["std"]
 std = []
 
 [dependencies]
