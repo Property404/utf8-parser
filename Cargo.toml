@@ -4,7 +4,6 @@ description = "A one-byte-at-a-time UTF-8 parser"
 categories = ["no-std::no-alloc"]
 keywords = ["unicode", "utf-8"]
 authors = ["Property404 <DontEmailMeOrMySonEverAgain@example.com>"]
-homepage = "https://github.com/Property404/utf8-parser"
 repository = "https://github.com/Property404/utf8-parser"
 version = "0.0.2"
 edition = "2021"
