@@ -3,8 +3,8 @@
 A stateful one-byte-at-a-time UTF-8 parser. This is useful for things like
 building characters from bytes pulled from a UART.
 
-
-[![crates.io](https://img.shields.io/crates/v/utf8-parser.svg)](https://crates.io/crates/utf8-parser) [![Documentation](https://docs.rs/utf8-parser/badge.svg)](https://docs.rs/utf8-parser)
+[![crates.io](https://img.shields.io/crates/v/utf8-parser.svg)](https://crates.io/crates/utf8-parser)
+[![Documentation](https://docs.rs/utf8-parser/badge.svg)](https://docs.rs/utf8-parser)
 
 ## Example
 
