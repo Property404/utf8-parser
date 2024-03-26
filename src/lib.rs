@@ -47,14 +47,16 @@ pub enum Utf8ByteType {
 
 impl Utf8ByteType {
     /// Get type of byte
-    pub fn of(byte: u8) -> Result<Self, Utf8ParserError> {
+    pub const fn of(byte: u8) -> Result<Self, Utf8ParserError> {
         use Utf8ByteType::*;
         let kinds = [Continuation, Single, Double, Triple, Quadruple];
 
-        for kind in kinds {
-            if kind.matches(byte) {
-                return Ok(kind);
+        let mut i = 0;
+        while i < kinds.len() {
+            if kinds[i].matches(byte) {
+                return Ok(kinds[i]);
             }
+            i += 1;
         }
 
         Err(Utf8ParserError::InvalidByte(byte))
