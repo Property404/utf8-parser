@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - name: Install MDL
-        run: sudo gem install mdl
+      - name: Clone dagan-utils
+        run: git clone https://github.com/Property404/dagan-utils ../dagan-utils
       - name: Lint README
-        run: mdl -- $(find . -name '*.md')
+        run: ../dagan-utils/bin/wslint -- $(find . -name '*.md')
