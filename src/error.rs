@@ -15,11 +15,11 @@ pub enum Utf8ParserError {
     ///
     /// From Wikipedia:
     /// > The standard specifies that the correct encoding of a code point uses only the minimum
-    /// number of bytes required to hold the significant bits of the code point. Longer encodings
-    /// are called overlong and are not valid UTF-8 representations of the code point. This rule
-    /// maintains a one-to-one correspondence between code points and their valid encodings, so
-    /// that there is a unique valid encoding for each code point. This ensures that string
-    /// comparisons and searches are well-defined.
+    /// > number of bytes required to hold the significant bits of the code point. Longer encodings
+    /// > are called overlong and are not valid UTF-8 representations of the code point. This rule
+    /// > maintains a one-to-one correspondence between code points and their valid encodings, so
+    /// > that there is a unique valid encoding for each code point. This ensures that string
+    /// > comparisons and searches are well-defined.
     OverlongEncoding,
 }
 
