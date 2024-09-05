@@ -1,5 +1,5 @@
 #![doc = include_str!("../README.md")]
-#![cfg_attr(not(any(test, feature = "std")), no_std)]
+#![cfg_attr(not(test), no_std)]
 // Make sure our crate is documented
 #![warn(missing_docs)]
 // Makes us green in cargo-geiger

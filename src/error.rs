@@ -51,7 +51,4 @@ impl fmt::Display for Utf8ParserError {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for Utf8ParserError {}
-#[cfg(all(not(feature = "std"), feature = "error_in_core"))]
 impl core::error::Error for Utf8ParserError {}

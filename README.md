@@ -19,16 +19,6 @@ assert!(parser.push(0x8e).unwrap().is_none());
 assert_eq!(parser.push(0x84).unwrap(), Some('🎄'));
 ```
 
-## Crate Features
-
-* `std` - Enables the
-    [std::error::Error](https://doc.rust-lang.org/std/error/trait.Error.html)
-    implementation on `Utf8ParserError`
-* `error_in_core` - Same as `std`, but with
-    [core::error::Error](https://doc.rust-lang.org/core/error/trait.Error.html).
-    Currently requires Nightly and `#![feature(error_in_core)]`. Has no effect
-    if the `std` feature is enabled.
-
 ## Similar crates
 
 * [utf8parse](https://crates.io/crates/utf8parse) - by the Alacritty project
