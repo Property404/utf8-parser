@@ -1,6 +1,6 @@
 [package]
 name = "utf8-parser"
-version = "0.0.4"
+version = "0.1.0"
 description = "A one-byte-at-a-time UTF-8 parser"
 categories = ["no-std::no-alloc"]
 exclude = [".github"]

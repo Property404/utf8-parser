@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0] - 2024-10-11
+
 ### Changed
 
 - `Utf8ByteType::of` is now usable in a const context
+- Removed `std` and `error_in_core` features, now that `core:error` is stable
 
 ## [0.0.4] - 2023-12-16
 
