@@ -19,7 +19,7 @@ const FIRST_CODE_POINT_FOR_QUADRUPLE: u32 = 0x10000;
 ///
 /// # Example
 /// ```
-/// # fn main2() -> Result<(), utf8_parser::Utf8ParserError> {
+/// # fn main() -> Result<(), utf8_parser::Utf8ParserError> {
 /// use utf8_parser::Utf8ByteType;
 ///
 /// assert_eq!(Utf8ByteType::of(0b00000010)?, Utf8ByteType::Single);
@@ -147,7 +147,7 @@ const fn push_byte(current: u32, byte: u8) -> u32 {
 /// [Utf8Parser] will reset on errors. Example:
 ///
 /// ```
-/// # fn main2() -> Result<(), utf8_parser::Utf8ParserError> {
+/// # fn main() -> Result<(), utf8_parser::Utf8ParserError> {
 /// use utf8_parser::Utf8Parser;
 ///
 /// let mut parser = Utf8Parser::new();
