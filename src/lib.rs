@@ -5,7 +5,6 @@
 // Makes us green in cargo-geiger
 #![forbid(unsafe_code)]
 // Allowing arbitrary bit groupings makes readability easier in this context.
-// This only seems to be a problem in older clippy versions. (1.60 is complaining)
 #![allow(clippy::unusual_byte_groupings)]
 
 mod error;
