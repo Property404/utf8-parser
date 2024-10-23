@@ -110,9 +110,14 @@ enum ParsedByte {
 
 impl ParsedByte {
     // Construct from a byte
-    fn from_byte(byte: u8) -> Result<Self, Utf8ParserError> {
+    const fn from_byte(byte: u8) -> Result<Self, Utf8ParserError> {
         use Utf8ByteType::*;
-        let kind = Utf8ByteType::of(byte)?;
+        let kind = match Utf8ByteType::of(byte) {
+            Ok(val) => val,
+            Err(err) => {
+                return Err(err);
+            }
+        };
         let value = byte & kind.value_mask();
 
         Ok(match kind {
@@ -186,7 +191,12 @@ impl Utf8Parser {
 
     // Inner functionality of `push`
     fn push_inner_impl(&mut self, byte: u8) -> Result<Option<char>, Utf8ParserError> {
-        let byte = ParsedByte::from_byte(byte)?;
+        let byte = match ParsedByte::from_byte(byte) {
+            Ok(v) => v,
+            Err(e) => {
+                return Err(e);
+            }
+        };
 
         match (self.state, byte) {
             (State::OneLeft(current), ParsedByte::ContinuationByte(value)) => {
@@ -195,9 +205,10 @@ impl Utf8Parser {
                 if val < FIRST_CODE_POINT_FOR_DOUBLE {
                     return Err(Utf8ParserError::OverlongEncoding);
                 }
-                Ok(Some(
-                    char::try_from(val).map_err(|_| Utf8ParserError::InvalidChar(val))?,
-                ))
+                match char::from_u32(val) {
+                    Some(val) => Ok(Some(val)),
+                    None => Err(Utf8ParserError::InvalidChar(val)),
+                }
             }
             (State::TwoLeft(current), ParsedByte::ContinuationByte(value)) => {
                 let val = push_byte(current, value);
