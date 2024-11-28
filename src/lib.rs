@@ -178,7 +178,7 @@ impl Utf8Parser {
     }
 
     /// Push a byte into the parser
-    pub fn push(&mut self, byte: u8) -> Result<Option<char>, Utf8ParserError> {
+    pub const fn push(&mut self, byte: u8) -> Result<Option<char>, Utf8ParserError> {
         match self.push_inner_impl(byte) {
             Ok(val) => Ok(val),
             // Reset on error
@@ -190,7 +190,7 @@ impl Utf8Parser {
     }
 
     // Inner functionality of `push`
-    fn push_inner_impl(&mut self, byte: u8) -> Result<Option<char>, Utf8ParserError> {
+    const fn push_inner_impl(&mut self, byte: u8) -> Result<Option<char>, Utf8ParserError> {
         let byte = match ParsedByte::from_byte(byte) {
             Ok(v) => v,
             Err(e) => {
@@ -257,7 +257,7 @@ impl Utf8Parser {
     }
 
     // Reset the state
-    fn reset(&mut self) {
+    const fn reset(&mut self) {
         self.state = State::Fresh;
     }
 }
@@ -344,13 +344,23 @@ mod tests {
 
     #[test]
     fn reset_state_after_error() {
-        let mut parser = Utf8Parser::default();
+        let mut parser = Utf8Parser::new();
 
         // Push a valid start byte
         assert!(parser.push(0b1110_0000).is_ok());
         // Push an invalid byte
         assert!(parser.push(0b1111_1110).is_err());
         assert_eq!(parser.push(b'a'), Ok(Some('a')));
+    }
+
+    #[test]
+    const fn const_usage() {
+        let mut parser = Utf8Parser::new();
+
+        assert!(matches!(parser.push(0xf0), Ok(None)));
+        assert!(matches!(parser.push(0x9f), Ok(None)));
+        assert!(matches!(parser.push(0x90), Ok(None)));
+        assert!(matches!(parser.push(0x95), Ok(Some('🐕'))));
     }
 
     #[test]

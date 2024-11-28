@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- All public functions are now `const`
+
+### Changed
+
+- Min Rust bumped to 1.83
+
 ### Fixed
 
 - Minor documentation additions and fixes
