@@ -433,18 +433,18 @@ mod tests {
     #[test]
     fn random_input_dont_panic() {
         let mut parser = Utf8Parser::default();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for _ in 0..1_000_000 {
-            let _ = parser.push(rng.gen());
+            let _ = parser.push(rng.random());
         }
     }
 
     #[test]
     fn random_ascii_dont_error() {
         let mut parser = Utf8Parser::default();
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         for _ in 0..1_000_000 {
-            let val: u8 = rng.gen();
+            let val: u8 = rng.random();
             parser.push(val % 0x80).unwrap();
         }
     }
