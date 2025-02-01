@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Min Rust bumped to 1.83
+- Updated `rand` (development dependency) to `0.9.0`
 
 ### Fixed
 
